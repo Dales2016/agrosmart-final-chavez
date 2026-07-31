@@ -11,6 +11,7 @@ import ec.edu.espe.agrosmart.repository.ProductoRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import java.time.Duration;
 
 @Service
 public class ProductoService {
@@ -25,8 +26,14 @@ public class ProductoService {
 
     private final ProductoRepository repository;
 
-    public ProductoService(ProductoRepository repository) {
-        this.repository = repository;
+    private final AgroSmartAIService aiService;
+
+    public ProductoService(
+        ProductoRepository repository,
+        AgroSmartAIService aiService
+    ) {
+          this.repository = repository;
+          this.aiService = aiService;
     }
 
      public Flux<Producto> obtenerProductosComercializables() {
@@ -73,5 +80,28 @@ public class ProductoService {
                         new ProductoNoEncontradoException(id)
                 ));
     }
+
+    public Mono<String> generarPublicidad(
+        String producto,
+        String audiencia
+    ) {
+    // fromCallable difiere la llamada al modelo hasta que alguien se suscriba.
+    return Mono.fromCallable(
+                    () -> aiService.generarPublicidad(producto, audiencia)
+            )
+
+            // La solicitud HTTP al modelo es bloqueante y debe salir del event loop.
+            .subscribeOn(Schedulers.boundedElastic())
+
+            // Evita que una respuesta lenta mantenga indefinidamente abierto el flujo.
+            .timeout(Duration.ofSeconds(30))
+
+            // Recupera el flujo si el proveedor falla, excede la cuota o agota el tiempo.
+            .onErrorResume(error -> Mono.just(
+                    "Publicidad no disponible en este momento ("
+                            + error.getClass().getSimpleName()
+                            + ")"
+            ));
+        }
 
 }
