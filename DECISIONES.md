@@ -292,28 +292,44 @@ Publicidad no disponible en este momento (AuthenticationException)
 **7.1** Pega la salida real de tus pruebas (`./mvnw test` o `./gradlew test`).
 
 ```
+Running ec.edu.espe.agrosmart.domain.ProductoFiltersTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
 
+Running ec.edu.espe.agrosmart.domain.ProductoTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+
+Running ec.edu.espe.agrosmart.service.ProductoServiceTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+
+Running ec.edu.espe.agrosmart.service.PublicidadServiceTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+
+Results:
+
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0
+
+BUILD SUCCESS
 ```
 
 **7.2** ¿Cuántos productos espera tu `expectNextCount(...)` y por qué ese número
 concreto? Relaciónalo con tu semilla.
 
->
+> Mi prueba usa `expectNextCount(3)` porque la siembra contiene cinco productos de Quinua: tres válidos y dos inválidos. Mi semilla personal termina en 68, por lo que la categoría asignada es Quinua, mientras que el examen fija el conteo en tres productos válidos y dos inválidos. El `filter` elimina el producto con precio cero y el producto sin correos, dejando exactamente tres emisiones.
 
 **7.3** ¿Por qué mockeaste `ProductoRepository` en lugar de dejar que la prueba consulte
 PostgreSQL?
 
->
+> Mockeé `ProductoRepository` para que la prueba sea unitaria, rápida y determinista. De esta manera se controlo exactamente los cinco registros que devuelve `findAll()` y puedo simular un `Optional` vacío para el identificador inexistente. Si utilizara PostgreSQL, el resultado dependería del contenedor, las credenciales, la red y el estado previo de la base de datos. En mi verificación final detuve Docker y las 11 pruebas continuaron pasando, lo que confirma que no dependen de infraestructura externa.
 
 **7.4** ¿Qué demuestra `assertNotSame` que `assertEquals` **no** demuestra en tu prueba
 de copia defensiva?
 
->
+> `assertEquals` comprueba que dos listas contienen valores equivalentes, pero no demuestra que sean objetos diferentes. `assertNotSame` verifica que la lista recibida por el constructor y la lista devuelta por el `getter` no comparten la misma referencia. En mi prueba esto demuestra que Producto no expone directamente la lista externa ni su colección interna, por lo que no existe `aliasing` que permita modificar el estado del objeto desde fuera.
 
 **7.5** ¿Por qué una prueba de un `Flux` que no llama a `verifyComplete()` (o a
 `verify()`) no está probando nada?
 
->
+> El Reactor utiliza la ejecución diferida: declarar un `Flux` y configurar expectativas no ejecuta automáticamente el flujo. `verifyComplete()` o `verify()` realiza la suscripción, espera las señales y comprueba el resultado terminal. Si omitiera esa llamada, `StepVerifier` solo construiría el escenario de prueba; los operadores no se ejecutarían y una expectativa incorrecta podría quedar sin comprobar.
 
 ---
 
