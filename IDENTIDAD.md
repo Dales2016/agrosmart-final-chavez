@@ -4,12 +4,11 @@
 > sincrónica** del examen. Toma menos de 5 minutos y es lo único con horario fijo:
 > después trabajas a tu ritmo hasta el plazo del día siguiente.
 
-- **Nombre completo:**
-- **Cédula:**
-- **NRC:**
-- **Nonce del examen:**            <!-- código publicado por el docente en la sesión -->
-- **Fecha y hora de inicio:**      <!-- formato: 2026-XX-XX HH:MM -->
-
+- **Nombre completo:** Daniel Alfonso Chavez Tamayo
+- **Cédula:** 1805240668
+- **NRC:** 30405
+- **Nonce del examen:** AGS-2026
+- **Fecha y hora de inicio:** 2026-07-30  19:35    
 ---
 
 ## Mi semilla personal
@@ -19,11 +18,11 @@ se busca en una tabla.
 
 | # | Parámetro | Cómo se obtiene | Mi valor |
 |:---:|-----------|-----------------|----------|
-| — | `NN` | los 2 últimos dígitos de mi cédula | |
-| 1 | Nombre de la tabla | `tbl_productos_base_` + `NN` | |
-| 2 | Puerto | `81` + `NN` | |
-| 3 | Categoría | según el **último dígito** (tabla de abajo) | |
-| — | Audiencia para el prompt de IA | según la categoría | |
+| — | `NN` | los 2 últimos dígitos de mi cédula |68|
+| 1 | Nombre de la tabla | `tbl_productos_base_` + `NN` | tbl_productos_base_68 |
+| 2 | Puerto | `81` + `NN` |8168|
+| 3 | Categoría | según el **último dígito** (tabla de abajo) |Quinua |
+| — | Audiencia para el prompt de IA | según la categoría | tiendas de alimentación saludable|
 
 **Tabla de categorías:**
 
@@ -63,4 +62,4 @@ Declaro que este repositorio es de mi autoría individual, que sustentaré oralm
 decisión de diseño que contiene, y que el historial de commits refleja fielmente el
 proceso de desarrollo que realicé.
 
-**Firma (nombre completo):**
+**Firma (nombre completo):** Daniel Alfonso Chavez Tamayo
