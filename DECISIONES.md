@@ -101,7 +101,7 @@ lo fuera? (piensa en la restricción `unique` de `nombre_producto`)
 **3.2** Escribe el código exacto de **tus dos** copias defensivas e indica en qué línea
 está cada una.
 
-```
+``` java
 // Copia defensiva de entrada — línea 28 de Producto.java
 this.correosNotificacion = new ArrayList<>(correosNotificacion);
 
@@ -119,7 +119,7 @@ el ataque concreto que quedaría abierto sobre **tu** clase.
 
 **3.4** ¿Cómo implementaste `A_MAYUSCULAS` para no mutar el `Producto` recibido?
 
-```
+``` java
 public static final Function<Producto, Producto> A_MAYUSCULAS = producto ->
         new Producto(
                 producto.getId(),
@@ -137,30 +137,60 @@ public static final Function<Producto, Producto> A_MAYUSCULAS = producto ->
 
 **4.1** Pega tu método `obtenerProductosComercializables()` completo.
 
-```java
+``` java
+public Flux<Producto> obtenerProductosComercializables() {
+    // fromCallable difiere la consulta JPA hasta que exista una suscripción.
+    return Mono.fromCallable(repository::findAll)
 
+            // JPA es bloqueante; boundedElastic evita bloquear el event loop de Netty.
+            .subscribeOn(Schedulers.boundedElastic())
+
+            // Convierte el Mono<List> en un Flux de productos individuales.
+            .flatMapMany(Flux::fromIterable)
+
+            // Convierte cada entidad JPA en un producto inmutable del dominio.
+            .map(ProductoMapper::toDominio)
+
+            // Genera otra instancia con el nombre en mayúsculas.
+            .map(ProductoFilters.A_MAYUSCULAS)
+
+            // Descarta los productos que no son comercializables.
+            .filter(ProductoFilters.IS_VALID)
+
+            // Registra cada producto sin modificarlo.
+            .doOnNext(ProductoFilters.LOG_PRODUCTO)
+
+            // Emite un producto genérico si el flujo termina vacío.
+            .defaultIfEmpty(PRODUCTO_GENERICO);
+}
 ```
 
 **4.2** ¿Qué pasa **exactamente** si eliminas
 `.subscribeOn(Schedulers.boundedElastic())` de ese método? Si lo probaste, indica qué
 hilo aparecía en el log antes y después.
 
->
+> Si eliminara `subscribeOn(Schedulers.boundedElastic())`, la consulta repository.findAll() seguiría siendo diferida, pero se ejecutaría en el hilo que realizó la suscripción. Cuando el flujo sea utilizado por el controlador WebFlux, ese hilo pertenecerá normalmente al event loop de Netty. Como JPA/Hibernate espera de forma bloqueante la respuesta de PostgreSQL, el event loop quedaría ocupado y no podría atender otras solicitudes durante ese tiempo. Esto reduciría la capacidad de concurrencia de toda la aplicación.
+
+> No eliminé esta línea en la versión final ni hice todavía una comparación desde el endpoint, por lo que no registro nombres de hilos como si los hubiera medido. Con la configuración implementada, la consulta debe ejecutarse en un hilo boundedElastic-* sin esa configuración, al invocarla desde WebFlux podría ejecutarse en un hilo reactor-http-nio-*.
 
 **4.3** ¿Por qué `Mono.fromCallable(...)` y no `Mono.just(repository.findAll())`?
 (pista: cuándo se ejecuta cada uno)
 
->
+> Usé `Mono.fromCallable(repository::findAll)` porque la llamada al repositorio no se ejecuta al construir el flujo, sino cuando alguien se suscribe. Esto permite que `subscribeOn` traslade la consulta completa a `boundedElastic`. En cambio, con `Mono.just(repository.findAll())`, Java evaluaría primero `repository.findAll()` para obtener el argumento de just. La consulta se ejecutaría inmediatamente en el hilo actual, antes de que Reactor pudiera asignarla al planificador adecuado.
 
 **4.4** En **tu** código, ¿dónde usaste `defaultIfEmpty` y dónde `switchIfEmpty`, y por
 qué no son intercambiables en esos dos lugares?
 
->
+> Usé `defaultIfEmpty(PRODUCTO_GENERICO)` al final de `obtenerProductosComercializables()`. Si el repositorio no devuelve registros o si filter descarta todos los productos inválidos, el flujo termina vacío y se emite un producto genérico como respuesta normal.
+
+> Usé `switchIfEmpty(Mono.error(new ProductoNoEncontradoException(id)))` en `buscarPorId(Long id)`. Cuando el `Optional` del repositorio está vacío, el Mono cambia a otro publisher que termina con un error. Ese error después se traduce en una respuesta HTTP 404.
+
+> No son intercambiables en estos casos porque `defaultIfEmpty` incorpora directamente un valor normal, mientras que `switchIfEmpty` nos permite cambiar a otro flujo, incluido uno que emite un error. En el listado necesito una respuesta de respaldo; en la búsqueda individual necesito señalar que el recurso solicitado no existe.
 
 **4.5** ¿Por qué `doOnNext` no sirve para transformar el elemento, si aparentemente
 "recibe" el producto?
 
->
+> `doOnNext` recibe un `Consumer`, cuya operación no devuelve un nuevo valor. Lo utilicé únicamente para registrar cada producto comercializable mediante `LOG_PRODUCTO`. Después de ejecutar ese efecto de trazabilidad, el Reactor continúa enviando el mismo producto por el flujo. Para transformar un elemento se necesita map, porque recibe una función que devuelve el valor que será emitido a continuación.
 
 ---
 
