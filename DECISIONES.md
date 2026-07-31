@@ -96,23 +96,38 @@ lo fuera? (piensa en la restricción `unique` de `nombre_producto`)
 **3.1** ¿Por qué tienes **dos** clases (`ProductoEntity` y `Producto`) en lugar de una?
 ¿Qué te impide hacer inmutable directamente la entidad de Hibernate?
 
->
+>Separé las clases porque cumplen funciones diferentes. `ProductoEntity` representa la tabla y Hibernate necesita un constructor vacío y setters para materializar sus objetos. En cambio, `Producto` representa el dominio utilizado por la lógica del sistema, por lo que puede ser `final`, tener atributos `private final` y no exponer setters. Si hiciera inmutable directamente la entidad, dificultaría el funcionamiento normal del ORM.
 
 **3.2** Escribe el código exacto de **tus dos** copias defensivas e indica en qué línea
 está cada una.
 
-```java
+```
+// Copia defensiva de entrada — línea 28 de Producto.java
+this.correosNotificacion = new ArrayList<>(correosNotificacion);
+
+// Copia defensiva de salida — línea 49 de Producto.java
+return Collections.unmodifiableList(
+        new ArrayList<>(correosNotificacion)
+);
 
 ```
 
 **3.3** ¿Por qué la copia defensiva **solo en el getter** no sería suficiente? Describe
 el ataque concreto que quedaría abierto sobre **tu** clase.
 
->
+>Si guardara directamente la lista recibida por el constructor, el código que creó el producto conservaría la misma referencia. Por ejemplo, podría construir el producto con una lista que contiene un correo y después agregar otro correo a esa lista original. El estado interno de mi `Producto` cambiaría aunque no tenga setters. La copia del getter no evita ese cambio porque la modificación entra por la referencia recibida en el constructor.
 
 **3.4** ¿Cómo implementaste `A_MAYUSCULAS` para no mutar el `Producto` recibido?
 
-```java
+```
+public static final Function<Producto, Producto> A_MAYUSCULAS = producto ->
+        new Producto(
+                producto.getId(),
+                producto.getNombre().toUpperCase(Locale.ROOT),
+                producto.getCategoria(),
+                producto.getPrecioUsd(),
+                producto.getCorreosNotificacion()
+        );
 
 ```
 
