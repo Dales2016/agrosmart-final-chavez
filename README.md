@@ -286,6 +286,7 @@ Los flujos se verifican con `StepVerifier` y finalizan con `verifyComplete()` o 
 | Producto existente y error 404 | [05_curl_producto_id_y_error_404.png](docs/evidencias/05_curl_producto_id_y_error_404.png) |
 | Publicidad y recuperación del error de IA | [06_curl_publicidad_ia.png](docs/evidencias/06_curl_publicidad_ia.png) |
 | Once pruebas unitarias en verde | [07_pruebas_unitarias_11_en_verde.png](docs/evidencias/07_pruebas_unitarias_11_en_verde.png) |
+| Historial completo de ramas y commits | [08_historial_git_completo.png](docs/evidencias/08_historial_git_completo.png) |
 
 ## Flujo de trabajo con Git
 

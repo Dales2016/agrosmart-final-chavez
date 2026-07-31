@@ -337,21 +337,23 @@ de copia defensiva?
 
 **8.1** Pega tu `git log --oneline --graph --all`.
 
-```
+>  Ejecuté `git log --oneline --graph --all -20`. La salida real completa se presenta en la siguiente evidencia:
 
-```
+![Historial completo de ramas y commits](docs/evidencias/08_historial_git_completo.png)
 
 **8.2** ¿Qué fase te tomó más tiempo del previsto y por qué?
 
->
+> La Fase 1 fue la que más tiempo adicional me tomó. Otro proyecto ya estaba utilizando el puerto local 5432 y el volumen del contenedor conservaba credenciales anteriores. Esto provocó errores de autenticación de PostgreSQL que Hibernate mostraba después como imposibilidad de obtener los metadatos JDBC y determinar el dialecto. Para solucionarlo publiqué PostgreSQL en el puerto local 5433, mantuve el puerto interno 5432, alineé las credenciales del datasource y comprobé la conexión directamente con psql antes de volver a arrancar la aplicación. El puerto HTTP personal de AgroSmart se mantuvo correctamente en 8168.
 
 **8.3** Si tuvieras 30 minutos más, ¿qué mejorarías **primero** de tu entrega y por qué
 esa y no otra?
 
->
+> Primero agregaría pruebas del controlador con `WebTestClient`. Las 11 pruebas actuales verifican el modelo inmutable, los filtros, el servicio reactivo, el error por identificador inexistente y la recuperación ante fallos de la IA, pero los contratos HTTP se comprobaron manualmente con `curl`. Con `WebTestClient` podría automatizar la verificación de los estados 200 y 404, el tipo de contenido y la serialización de las respuestas. Priorizaría esto antes que una mejora visual o una nueva funcionalidad porque aumentaría la cobertura y permitiría detectar regresiones en la API sin depender de una comprobación manual.
 
 **8.4** Declara honestamente qué herramientas consultaste durante el examen
 (documentación, apuntes, asistentes de IA) y para qué. **Esta declaración no descuenta
 puntaje**; su omisión o falsedad sí constituye falta de honestidad académica.
 
->
+> Consulté el enunciado y las plantillas proporcionadas por el docente, además de mis apuntes de programación reactiva, JPA/Hibernate, inmutabilidad y pruebas unitarias. Utilicé Spring Initializr para generar la estructura inicial, Maven para compilar y ejecutar las pruebas, Docker Compose y psql para levantar y verificar PostgreSQL, Git y GitHub para administrar las ramas y Pull Requests, y las herramientas de diagnóstico de Visual Studio Code para localizar errores de compilación.
+
+> También utilicé ChatGPT como asistente de IA para recibir orientación paso a paso, comprender mensajes de error, revisar conceptos técnicos, proponer comandos de diagnóstico y mejorar la redacción de la documentación. Ejecuté y verifiqué personalmente cada comando, ajuste, prueba, consulta y endpoint incluido en el repositorio. Las capturas, salidas de curl, resultados de pruebas y registros de Git corresponden a ejecuciones reales de mi proyecto.

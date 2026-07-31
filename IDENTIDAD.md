@@ -50,9 +50,9 @@ se busca en una tabla.
 > haberlo entregado y C8 se califica en nivel 1.
 
 - **Enlace al video (5 min, cámara + pantalla):**
-- **Plataforma:**                  <!-- Drive institucional / OneDrive / YouTube no listado -->
-- **Acceso verificado en incógnito:**   ☐ Sí
-- **Duración real:**
+- **Plataforma:** Youtube enlace https://youtu.be/wWNyQSD4RWk
+- **Acceso verificado en incógnito:**   Sí
+- **Duración real:** 8:26 minutos
 
 ---
 
