@@ -199,28 +199,52 @@ qué no son intercambiables en esos dos lugares?
 **5.1** Pega tu interfaz `AgroSmartAIService` completa.
 
 ```java
+@AiService
+public interface AgroSmartAIService {
 
+    @UserMessage("""
+            Redacta una frase publicitaria de máximo 100 caracteres para vender \
+            {{producto}} dirigido a {{audiencia}}.""")
+    String generarPublicidad(
+            @V("producto") String producto,
+            @V("audiencia") String audiencia
+    );
+}
 ```
 
 **5.2** ¿Qué hace `@V("producto")` y qué pasaría si lo quitaras dejando solo el
 parámetro?
 
->
+> `@V("producto")` relaciona el parámetro Java producto con la variable `{{producto}}` utilizada dentro de `@UserMessage`. LangChain4j reemplaza esa variable con el valor recibido cuando construye el prompt. Si quitara `@V` y dejara solamente el parámetro, el framework no tendría un mapeo explícito para sustituir `{{producto}}`; el proxy podría fallar al procesar la plantilla o dejar la variable sin resolver.
 
 **5.3** ¿En qué archivo y con qué líneas configuraste el modelo? ¿Por qué **no** hizo
 falta declarar un `@Bean`?
 
->
+> Configuré el modelo en src/main/resources/application-prod.properties mediante estas líneas:
+langchain4j.open-ai.chat-model.api-key=demo
+langchain4j.open-ai.chat-model.model-name=gpt-4o-mini
+langchain4j.open-ai.chat-model.timeout=30s
+langchain4j.open-ai.chat-model.log-requests=true
+langchain4j.open-ai.chat-model.log-responses=true
+logging.level.dev.langchain4j=DEBUG
+> No declaré un `@Bean` porque el starter de LangChain4j utiliza la configuración de Spring Boot para crear automáticamente el modelo de chat y el proxy de la interfaz anotada con `@AiService`. En mi código solo definí el contrato y las propiedades necesarias, evitando una configuración manual duplicada.
 
 **5.4** ¿Por qué la llamada a la IA también necesita `boundedElastic`, si no es una
 consulta a base de datos?
 
->
+> La llamada a la IA también necesita `boundedElastic` porque el método del cliente espera de forma bloqueante la respuesta HTTP del proveedor. Aunque no consulta PostgreSQL, sigue siendo una operación de entrada y salida que puede tardar por la red, la cuota o el procesamiento del modelo. Si se ejecutara en el `event loop` de Netty, ese hilo quedaría ocupado y afectaría la atención de otras solicitudes. Por eso envolví la llamada en `Mono.fromCallable` y la asigné a `Schedulers.boundedElastic()`.
 
 **5.5** Si tu proveedor devolvió un error durante el examen, pega el mensaje real y la
 respuesta que produjo tu `onErrorResume`.
 
 ```
+Durante esta fase todavía no se ejecutó una solicitud real al proveedor porque el endpoint HTTP se implementará en la Fase 6. Por esa razón no registro un error real que haya ocurrido. Mi flujo quedó preparado para responder ante cualquier excepción con el siguiente formato:
+
+Publicidad no disponible en este momento (NombreDeLaExcepcion)
+
+Por ejemplo, si se agotara el tiempo de 30 segundos, onErrorResume convertiría el error en una respuesta de respaldo similar a:
+
+Publicidad no disponible en este momento (TimeoutException)
 
 ```
 
