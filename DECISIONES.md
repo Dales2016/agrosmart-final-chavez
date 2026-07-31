@@ -17,10 +17,10 @@
 
 ## Datos
 
-- **Nombre:**
-- **Cédula:**
-- **NN (dos últimos dígitos):**
-- **Categoría asignada (según el último dígito):**
+- **Nombre:** Daniel Alfonso Chavez Tamayo
+- **Cédula:** 1805240668
+- **NN (dos últimos dígitos):** 68
+- **Categoría asignada (según el último dígito):** Quinua
 
 ---
 
@@ -28,23 +28,28 @@
 
 **1.1** ¿Qué archivo activa el perfil `prod` y qué línea exacta lo hace?
 
->
+> El perfil se activa en `src/main/resources/application.properties` mediante la línea `spring.profiles.active=prod` .
 
 **1.2** Pega la línea del log de arranque donde se ve tu puerto y el perfil activo.
 
 ```
-
+The following 1 profile is active: "prod"
+Netty started on port 8168 (http)
+Started AgroSmartApplication
 ```
 
 **1.3** ¿Qué habría pasado si dejabas `ddl-auto=create-drop` en lugar de `update`?
 Responde pensando en tus datos sembrados.
 
->
+> Si usaba `create-drop`, Hibernate habría creado las tablas al iniciar y las habría eliminado al apagar la aplicación.
+> Esto provocaria que los cinco productos sembrados y cualquier dato agregado durante las pruebas se pierdan en cada ejecución.
+> Con `update` se conserva la información y Hibernate solamente actualiza el esquema cuando es necesario.
 
 **1.4** ¿Levantaste PostgreSQL con `compose.yaml` (Opción A) o con una instalación local
 (Opción B)? ¿Qué ventaja tiene la que elegiste?
 
->
+> Utilicé la opción A `compose.yaml`. La ventaja es que PostgreSQL queda configurado de una forma reproducible con la base `agrosmart_db` y el usuario y la contraseña requeridos, sin depender de una instalación local.
+> En mi equipo tuve un conflicto porque otro proyecto ocupaba el puerto 5432 y el contenedor conservaba credenciales anteriores, por eso publiqué PostgreSQL en el puerto 5433 y mantuve el 8168 para la aplicación.
 
 ---
 

@@ -1,9 +1,10 @@
 services:
   postgres:
     image: 'postgres:latest'
+    container_name: agrosmart-postgres
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      - 'POSTGRES_DB=agrosmart_db'
+      - 'POSTGRES_PASSWORD=agrosmart'
+      - 'POSTGRES_USER=agrosmart'
     ports:
-      - '5432'
+      - '5433:5432'
