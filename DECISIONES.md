@@ -238,13 +238,11 @@ consulta a base de datos?
 respuesta que produjo tu `onErrorResume`.
 
 ```
-Durante esta fase todavía no se ejecutó una solicitud real al proveedor porque el endpoint HTTP se implementará en la Fase 6. Por esa razón no registro un error real que haya ocurrido. Mi flujo quedó preparado para responder ante cualquier excepción con el siguiente formato:
+Durante la prueba del endpoint, el proveedor devolvió el error real AuthenticationException. Mi implementación evitó que el error se propagara y onErrorResume produjo la siguiente respuesta de respaldo:
 
-Publicidad no disponible en este momento (NombreDeLaExcepcion)
+Publicidad no disponible en este momento (AuthenticationException)
 
-Por ejemplo, si se agotara el tiempo de 30 segundos, onErrorResume convertiría el error en una respuesta de respaldo similar a:
-
-Publicidad no disponible en este momento (TimeoutException)
+Esto demuestra que el flujo se recupera correctamente cuando falla la autenticación del proveedor externo y que el endpoint continúa respondiendo sin devolver un error 500.
 
 ```
 
@@ -255,17 +253,37 @@ Publicidad no disponible en este momento (TimeoutException)
 **6.1** Pega la salida real de tus cuatro `curl`.
 
 ```
+> curl.exe http://localhost:8168/api/productos
 
+[{"id":1,"nombre":"QUINUA ORGÁNICA DE ALTURA","categoria":"Quinua","precioUsd":125.50,"correosNotificacion":["ventas@agrosmart.ec","exportaciones@agrosmart.ec"]},{"id":2,"nombre":"QUINUA ROJA PREMIUM","categoria":"Quinua","precioUsd":98.75,"correosNotificacion":["comercial@agrosmart.ec"]},{"id":3,"nombre":"QUINUA NEGRA ANDINA","categoria":"Quinua","precioUsd":110.00,"correosNotificacion":["pedidos@agrosmart.ec"]}]
+
+> curl.exe http://localhost:8168/api/productos/1
+
+{"id":1,"nombre":"Quinua orgánica de altura","categoria":"Quinua","precioUsd":125.50,"correosNotificacion":["ventas@agrosmart.ec","exportaciones@agrosmart.ec"]}
+
+> curl.exe -i http://localhost:8168/api/productos/9999
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Content-Length: 127
+
+{"timestamp":"2026-07-31T15:39:21.083Z","path":"/api/productos/9999","status":404,"error":"Not Found","requestId":"484b1692-3"}
+
+> curl.exe "http://localhost:8168/api/agrosmart/publicidad?producto=Quinua%20organica%20de%20altura&audiencia=tiendas%20de%20alimentacion%20saludable"
+
+Publicidad no disponible en este momento (AuthenticationException)
 ```
 
 **6.2** ¿Cómo lograste que el id inexistente responda **404** y no 500?
 
->
+> Logré que el identificador inexistente responda 404 mediante dos partes de mi código. En `ProductoService.buscarPorId`, utilicé `switchIfEmpty` para convertir el Mono vacío en `Mono.error(new ProductoNoEncontradoException(id))`. Después anoté `ProductoNoEncontradoException` con `@ResponseStatus(HttpStatus.NOT_FOUND)`. Spring WebFlux reconoce esa anotación y transforma la excepción específica en una respuesta HTTP 404, en lugar de tratarla como un error interno 500.
 
 **6.3** ¿Qué pasaría si tu controlador devolviera `List<Producto>` en lugar de
 `Flux<Producto>`? ¿Seguiría compilando? ¿Seguiría siendo no bloqueante?
 
->
+> Con el código actual, cambiar únicamente el retorno del controlador de `Flux<Producto>` a `List<Producto>` no compilaría, porque `productoService.obtenerProductosComercializables()` nos devuelve un `Flux` y ambos tipos son incompatibles. Podría conseguir que compile modificando también la implementación para obtener una lista, por ejemplo bloqueando el flujo o consultando el repositorio directamente, pero eso rompería la arquitectura exigida.
+
+> Una lista necesita estar completamente materializada antes de devolverse. Si utilizara `block()` o ejecutara JPA directamente desde el controlador, el hilo de Netty tendría que esperar y el endpoint dejaría de ser no bloqueante. Además, perdería la emisión reactiva, la composición de operadores y el manejo de contrapresión proporcionado por Flux.
 
 ---
 
